@@ -1,0 +1,17 @@
+# 目标机遥控与任务参数（调参改此文件即可）
+# 初始水平距离需要传参：roslaunch ros_drone two_uav_depth_escape.launch target_offset_east_m:=5
+
+teleop:
+  # 水平方向速度 (m/s)，WASD：W前/vn(世界前向)  S后  A左  D右
+  horizontal_speed_mps: 2.0
+  # Q/E 垂直速度 (m/s)
+  # E 上升（NED 中 vz < 0），Q 下降（NED 中 vz > 0）
+  vertical_speed_mps: 2.0
+  # OFFBOARD 设定点发布频率 (Hz)
+  control_rate_hz: 20.0
+
+mission:
+  # 起飞后悬停高度 (m，ENU z)
+  hover_altitude_m: 1.0
+  # 目标机相对本机初始水平距离 (m，沿世界 +x/东向放置)；用 two_uav_depth_escape.sh 启动时自动同步到 spawn
+  target_initial_distance_m: 5.0

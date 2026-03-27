@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>detector</name>
+  <version>0.1.0</version>
+  <description>订阅无人机图像：默认可直接用 YOLOv8 .pt（Python）；可选 C++ ONNX 推理</description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>image_transport</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>rospy</exec_depend>
+</package>

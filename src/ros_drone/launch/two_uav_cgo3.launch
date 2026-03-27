@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<launch>
+  <!--
+    双机仿真：本机 uav0（iris_cgo3 + 云台 ROS 相机，地面待机）、目标 uav1（东侧 target_offset_east_m m，无偏航）。
+  -->
+  <env name="GAZEBO_PLUGIN_PATH" value="$(optenv GAZEBO_PLUGIN_PATH):/opt/ros/$(optenv ROS_DISTRO noetic)/lib"/>
+  <!-- 与 libgazebo_ros_camera.so 依赖的 Gazebo 核心插件（如 libCameraPlugin.so） -->
+  <env name="LD_LIBRARY_PATH" value="$(optenv LD_LIBRARY_PATH):/usr/lib/x86_64-linux-gnu/gazebo-11/plugins"/>
+  <!-- 减少无网环境下 Gazebo 在线模型库刷屏；需要时可 export 覆盖 -->
+  <env name="GAZEBO_MODEL_DATABASE_URI" value="$(optenv GAZEBO_MODEL_DATABASE_URI)"/>
+
+  <arg name="est" default="ekf2"/>
+  <arg name="vehicle" default="iris"/>
+  <!-- 本机自定义机模所在 PX4 源码根目录（未设置环境变量时用此默认） -->
+  <arg name="px4_autopilot" default="$(optenv PX4_AUTOPILOT_DIR /home/yy/PX4-Autopilot)"/>
+  <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
+  <arg name="gui" default="true"/>
+  <arg name="debug" default="false"/>
+  <arg name="verbose" default="false"/>
+  <arg name="paused" default="false"/>
+  <!-- 目标相对本机水平距离（米），沿 +x（东）放置 -->
+  <arg name="target_offset_east_m" default="5.0"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="world_name" value="$(arg world)"/>
+    <arg name="debug" value="$(arg debug)"/>
+    <arg name="verbose" value="$(arg verbose)"/>
+    <arg name="paused" value="$(arg paused)"/>
+  </include>
+
+  <!-- 本机：原点，带云台 + ROS 相机（SDF 见 PX4 树），地面待机 -->
+  <group ns="uav0">
+    <arg name="ID" value="0"/>
+    <arg name="fcu_url" default="udp://:14540@localhost:14580"/>
+    <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+      <arg name="x" value="0"/>
+      <arg name="y" value="0"/>
+      <arg name="z" value="0"/>
+      <arg name="R" value="0"/>
+      <arg name="P" value="0"/>
+      <arg name="Y" value="0"/>
+      <arg name="vehicle" value="iris_cgo3"/>
+      <arg name="sdf_file" value="$(arg px4_autopilot)/Tools/sitl_gazebo/models/iris_cgo3/iris_cgo3.sdf"/>
+      <arg name="mavlink_udp_port" value="14560"/>
+      <arg name="mavlink_tcp_port" value="4560"/>
+      <arg name="ID" value="$(arg ID)"/>
+      <arg name="gst_udp_port" value="$(eval 5600 + arg('ID'))"/>
+      <arg name="video_uri" value="$(eval 5600 + arg('ID'))"/>
+      <arg name="mavlink_cam_udp_port" value="$(eval 14530 + arg('ID'))"/>
+    </include>
+    <include file="$(find mavros)/launch/px4.launch">
+      <arg name="fcu_url" value="$(arg fcu_url)"/>
+      <arg name="gcs_url" value=""/>
+      <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
+      <arg name="tgt_component" value="1"/>
+    </include>
+  </group>
+
+  <!-- 目标机：东侧 target_offset_east_m m，无姿态角，普通 iris -->
+  <group ns="uav1">
+    <arg name="ID" value="1"/>
+    <arg name="fcu_url" default="udp://:14541@localhost:14581"/>
+    <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+      <arg name="x" value="$(arg target_offset_east_m)"/>
+      <arg name="y" value="0"/>
+      <arg name="z" value="0"/>
+      <arg name="R" value="0"/>
+      <arg name="P" value="0"/>
+      <arg name="Y" value="0"/>
+      <arg name="vehicle" value="$(arg vehicle)"/>
+      <arg name="mavlink_udp_port" value="14561"/>
+      <arg name="mavlink_tcp_port" value="4561"/>
+      <arg name="ID" value="$(arg ID)"/>
+      <arg name="gst_udp_port" value="$(eval 5600 + arg('ID'))"/>
+      <arg name="video_uri" value="$(eval 5600 + arg('ID'))"/>
+      <arg name="mavlink_cam_udp_port" value="$(eval 14530 + arg('ID'))"/>
+    </include>
+    <include file="$(find mavros)/launch/px4.launch">
+      <arg name="fcu_url" value="$(arg fcu_url)"/>
+      <arg name="gcs_url" value=""/>
+      <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
+      <arg name="tgt_component" value="1"/>
+    </include>
+  </group>
+</launch>

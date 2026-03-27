@@ -1,0 +1,20 @@
+# ROS / catkin build artifacts
+build/
+devel/
+install/
+log/
+logs/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# ROS generated metadata
+*.bag.active
+
+# Editor / OS temp files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- C++ + OpenCV DNN，需兼容的 ONNX；Ubuntu 20.04 自带 OpenCV 4.2 常无法解析新版 YOLOv8 ONNX -->
+  <arg name="image_topic" default="/uav0/camera/rgb/image_raw"/>
+  <arg name="onnx_model_path" default="$(find detector)/../../best_v8.onnx"/>
+  <node pkg="detector" type="yolov8_detector_node" name="yolov8_detector" output="screen">
+    <param name="image_topic" value="$(arg image_topic)"/>
+    <param name="onnx_model_path" value="$(arg onnx_model_path)"/>
+    <param name="annotated_image_topic" value="annotated_image"/>
+    <param name="conf_threshold" value="0.25"/>
+    <param name="nms_threshold" value="0.45"/>
+    <param name="input_size" value="640"/>
+    <param name="publish_annotated" value="true"/>
+  </node>
+</launch>

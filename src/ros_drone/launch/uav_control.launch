@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 仅启动目标机遥控节点（仿真需已由 two_uav_cgo3.launch 拉起）。 -->
+  <node pkg="ros_drone" type="uav_control.py" name="uav_control" output="screen">
+    <rosparam file="$(find ros_drone)/config/target_escape_teleop.yaml" command="load"/>
+  </node>
+</launch>

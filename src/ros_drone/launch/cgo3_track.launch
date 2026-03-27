@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="image_topic" default="/gimbal_camera/image_raw"/>
+  <arg name="model_path" default="$(find detector)/../../best_v8.pt"/>
+  <arg name="mount_command_topic" default="/uav0/mavros/mount_control/command"/>
+  <arg name="target_track_topic" default="/target_in_image"/>
+
+  <node pkg="detector" type="yolov8_detector_pt.py" name="yolov8_detector" output="screen">
+    <param name="image_topic" value="$(arg image_topic)"/>
+    <param name="model_path" value="$(arg model_path)"/>
+    <param name="annotated_image_topic" value="annotated_image"/>
+    <param name="publish_target_track" value="true"/>
+    <param name="target_track_topic" value="$(arg target_track_topic)"/>
+    <param name="conf_threshold" value="0.25"/>
+    <param name="nms_threshold" value="0.45"/>
+    <param name="input_size" value="640"/>
+    <param name="publish_annotated" value="true"/>
+    <param name="target_class_id" value="-1"/>
+    <param name="device" value="auto"/>
+  </node>
+
+  <!-- 云台：yaw + pitch 跟踪 + 丢失后仅 yaw 扫描（pitch 保持最后值） -->
+  <node pkg="ros_drone" type="gimbal_track_target.py" name="gimbal_track_target" output="screen">
+    <param name="mount_command_topic" value="$(arg mount_command_topic)"/>
+    <param name="target_track_topic" value="$(arg target_track_topic)"/>
+
+    <param name="initial_yaw_deg" value="0"/>
+    <param name="initial_pitch_deg" value="0"/>
+    <param name="invert_yaw" value="false"/>
+    <param name="invert_pitch" value="true"/>
+
+    <param name="yaw_gain_deg" value="0.8"/>
+    <param name="pitch_gain_deg" value="0.6"/>
+    <param name="dead_zone_normalized" value="0.06"/>
+
+    <param name="yaw_min_deg" value="-80"/>
+    <param name="yaw_max_deg" value="80"/>
+    <param name="pitch_min_deg" value="-45"/>
+    <param name="pitch_max_deg" value="45"/>
+
+    <param name="lost_target_timeout" value="1.5"/>
+    <param name="min_detection_conf" value="0.25"/>
+
+    <param name="scan_yaw_period_s" value="14"/>
+    <param name="scan_yaw_span_ratio" value="0.92"/>
+    <param name="scan_rate_hz" value="20"/>
+
+    <!-- 跟随稳定性：误差低通 + 单步限幅 -->
+    <param name="error_lpf_alpha" value="0.35"/>
+    <param name="max_step_yaw_deg" value="0.4"/>
+    <param name="max_step_pitch_deg" value="0.3"/>
+  </node>
+</launch>
+

@@ -53,3 +53,17 @@ roslaunch ros_drone cgo3_yaw_track.launch
 ```bash
 roslaunch ros_drone cgo3_track.launch
 ```
+
+### 目标丢失反馈测试
+只让云台动，不让机体动
+```bash
+rosrun ros_drone target_searcher_tester \
+  _uav_prefix:=/uav0 _interactive:=true _scenario_duration_s:=8 \
+  _arm_and_offboard:=false _send_velocity:=false
+```
+云台 + 机体都执行
+```bash
+rosrun ros_drone target_searcher_tester \
+  _uav_prefix:=/uav0 _interactive:=true _scenario_duration_s:=8 \
+  _arm_and_offboard:=true _send_velocity:=true
+```

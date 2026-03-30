@@ -1,0 +1,9 @@
+wide_search:
+  max_horizontal_speed: 0.35      # WIDE：水平平移速度上限 (m/s)
+  max_vertical_speed: 0.22        # WIDE：垂直速度上限 (m/s)
+  max_horizontal_travel_m: 4.0    # WIDE：相对切入点最大水平平移距离 (m)
+  max_vertical_travel_m: 2.5      # WIDE：相对切入点最大垂直位移 (m)
+  gimbal_yaw_gain_rad: 0.15       # WIDE：云台 yaw 像素增益 (rad)，yaw += gain * px
+  gimbal_pitch_gain_rad: 0.15     # WIDE：云台 pitch 像素增益 (rad)，pitch += gain * py
+  gimbal_pitch_limit_rad: 0.65    # WIDE：云台 pitch 限幅 (rad)
+  body_yaw_rate: 0.08             # WIDE：机体 yaw_rate 最大值 (rad/s)，随 px 缩放

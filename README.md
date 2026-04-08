@@ -54,16 +54,21 @@ roslaunch ros_drone cgo3_yaw_track.launch
 roslaunch ros_drone cgo3_track.launch
 ```
 
-### 目标丢失反馈测试
-只让云台动，不让机体动
+### TargetSearcher 测试（`config/target_searcher.yaml` 由 launch 内 `rosparam load` 注入）
 ```bash
-rosrun ros_drone target_searcher_tester \
-  _uav_prefix:=/uav0 _interactive:=true _scenario_duration_s:=8 \
-  _arm_and_offboard:=false _send_velocity:=false
+# 默认 session_mode=true：起飞后在初始点悬停，在同一终端输入命令（需有 stdin）：
+#   WIDE 1 1        — 执行一段搜索（最长 scenario_duration_s 秒）
+#   return 或 r     — 回到本次记录的初始悬停点
+#   quit            — 退出节点
+roslaunch ros_drone target_searcher_tester.launch uav_prefix:=/uav0 takeoff_altitude_m:=2.0
+
+# 单次自动测试（无终端交互）：session_mode:=false，并用 lost_* 指定像素
+roslaunch ros_drone target_searcher_tester.launch session_mode:=false lost_pixel_x:=1.0 lost_pixel_y:=1.0
 ```
-云台 + 机体都执行
+
+### 可视化查看话题数值
 ```bash
-rosrun ros_drone target_searcher_tester \
-  _uav_prefix:=/uav0 _interactive:=true _scenario_duration_s:=8 \
-  _arm_and_offboard:=true _send_velocity:=true
+rqt_plot /uav0/mavros/local_position/velocity_local/twist/linear/x \
+         /uav0/mavros/local_position/velocity_local/twist/linear/y \
+         /uav0/mavros/local_position/velocity_local/twist/linear/z
 ```

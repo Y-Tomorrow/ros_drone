@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- TargetSearcher 测试：仅此 launch；<rosparam load> yaml → ~/target_searcher/wide/* -->
+  <!-- session_mode=true：起飞后悬停，在本终端输入 WIDE 1 1 / return / quit（勿用无 stdin 的后台 launch） -->
+  <arg name="uav_prefix" default="/uav0" doc="MAVROS 命名空间前缀，如 /uav0"/>
+  <arg name="session_mode" default="true" doc="false 为单次自动任务（用 lost_*），true 为终端多轮任务"/>
+  <arg name="arm_and_offboard" default="true"/>
+  <arg name="send_velocity" default="true"/>
+  <arg name="send_gimbal" default="true"/>
+  <arg name="scenario_duration_s" default="10.0" doc="每段 WIDE/TELE/BOTH 任务最长秒数"/>
+  <arg name="return_pos_tol_m" default="0.25"/>
+  <arg name="return_z_tol_m" default="0.15"/>
+  <arg name="interactive" default="false" doc="仅 session_mode=false 时：true 启动时读一行任务"/>
+  <arg name="lost_from_cam" default="WIDE"/>
+  <arg name="lost_pixel_x" default="1.0"/>
+  <arg name="lost_pixel_y" default="0.0"/>
+  <arg name="hold_after_test" default="true" doc="仅 session_mode=false：结束后悬停直到 Ctrl+C"/>
+  <arg name="enable_takeoff" default="true"/>
+  <arg name="takeoff_altitude_m" default="1.0"/>
+  <arg name="takeoff_alt_tolerance_m" default="0.15" doc="认为到达高度的容差；要更贴近目标高度可改小，如 0.05"/>
+  <arg name="loop_hz" default="50.0"/>
+  <!-- 可选：换一份 yaml；默认用包内 config/target_searcher.yaml -->
+  <arg name="target_searcher_yaml" default="$(find ros_drone)/config/target_searcher.yaml"/>
+
+  <!-- 测试节点会按时长正常 exit(0)；勿 required=true，否则 roslaunch 会误报 “REQUIRED process has died” 并整包关闭 -->
+  <node pkg="ros_drone" type="target_searcher_tester_bin" name="target_searcher_tester" output="screen">
+    <rosparam command="load" file="$(arg target_searcher_yaml)"/>
+
+    <param name="uav_prefix" value="$(arg uav_prefix)"/>
+    <param name="arm_and_offboard" value="$(arg arm_and_offboard)"/>
+    <param name="send_velocity" value="$(arg send_velocity)"/>
+    <param name="send_gimbal" value="$(arg send_gimbal)"/>
+    <param name="scenario_duration_s" value="$(arg scenario_duration_s)"/>
+    <param name="session_mode" value="$(arg session_mode)"/>
+    <param name="return_pos_tol_m" value="$(arg return_pos_tol_m)"/>
+    <param name="return_z_tol_m" value="$(arg return_z_tol_m)"/>
+    <param name="interactive" value="$(arg interactive)"/>
+    <param name="lost_from_cam" value="$(arg lost_from_cam)"/>
+    <param name="lost_pixel_x" value="$(arg lost_pixel_x)"/>
+    <param name="lost_pixel_y" value="$(arg lost_pixel_y)"/>
+    <param name="hold_after_test" value="$(arg hold_after_test)"/>
+    <param name="enable_takeoff" value="$(arg enable_takeoff)"/>
+    <param name="takeoff_altitude_m" value="$(arg takeoff_altitude_m)"/>
+    <param name="takeoff_alt_tolerance_m" value="$(arg takeoff_alt_tolerance_m)"/>
+    <param name="loop_hz" value="$(arg loop_hz)"/>
+  </node>
+</launch>

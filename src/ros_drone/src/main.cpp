@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   nh.subscribe<geometry_msgs::TwistStamped>(ns + "/mavros/local_position/velocity_body", 10,
                                             boost::bind(&DataManager::feed_vel_body, &data_manager, _1));
 
-  nh.subscribe<geometry_msgs::TwistStamped>(ns + "/mavros/global_position/velocity_local", 10,
+  nh.subscribe<geometry_msgs::TwistStamped>(ns + "/mavros/local_position/velocity_local", 10,
                                             boost::bind(&DataManager::feed_vel_enu, &data_manager, _1));
 
   nh.subscribe<sensor_msgs::Imu>(ns + "/mavros/imu/data", 10,

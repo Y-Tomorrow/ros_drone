@@ -7,7 +7,7 @@
   <arg name="arm_and_offboard" default="true"/>
   <arg name="send_velocity" default="true"/>
   <arg name="send_gimbal" default="true"/>
-  <arg name="scenario_duration_s" default="10.0" doc="每段 WIDE/TELE/BOTH 任务最长秒数"/>
+  <arg name="scenario_duration_s" default="70.0" doc="每段 WIDE/TELE/BOTH 任务最长秒数"/>
   <arg name="return_pos_tol_m" default="0.25"/>
   <arg name="return_z_tol_m" default="0.15"/>
   <arg name="interactive" default="false" doc="仅 session_mode=false 时：true 启动时读一行任务"/>

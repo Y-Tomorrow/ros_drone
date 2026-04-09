@@ -140,7 +140,8 @@ static void toUpperAscii(std::string* s) {
   }
 }
 
-// 解析一行: "WIDE 1 1" / "TELE -1 0" / "BOTH 0.5 -0.3"（逗号仅作分隔多个示例时的说明，本函数只读第一组三个字段）
+// 解析一行: "WIDE 1 1" / "TELE -1 0" / "BOTH 0.5 -0.3" / "NONE 0 0"
+//（逗号仅作分隔多个示例时的说明，本函数只读第一组三个字段）
 static bool parseCamPixelLine(const std::string& line, std::string* cam_out, double* px_out, double* py_out,
                               std::string* err_out) {
   std::istringstream iss(line);
@@ -149,14 +150,14 @@ static bool parseCamPixelLine(const std::string& line, std::string* cam_out, dou
   double py = 0.0;
   if (!(iss >> cam >> px >> py)) {
     if (err_out) {
-      *err_out = "格式应为: <WIDE|TELE|BOTH> <pixel_x> <pixel_y>  例: WIDE 1 1  或  TELE -1 0";
+      *err_out = "格式应为: <WIDE|TELE|BOTH|NONE> <pixel_x> <pixel_y>  例: WIDE 1 1  或  TELE -1 0  或  NONE 0 0";
     }
     return false;
   }
   toUpperAscii(&cam);
-  if (cam != "WIDE" && cam != "TELE" && cam != "BOTH") {
+  if (cam != "WIDE" && cam != "TELE" && cam != "BOTH" && cam != "NONE") {
     if (err_out) {
-      *err_out = "相机应为 WIDE / TELE / BOTH，当前为: " + cam;
+      *err_out = "相机应为 WIDE / TELE / BOTH / NONE，当前为: " + cam;
     }
     return false;
   }
@@ -182,6 +183,9 @@ static CameraID camFromString(const std::string& cam) {
   if (cam == "BOTH") {
     return CameraID::BOTH;
   }
+  if (cam == "NONE") {
+    return CameraID::NONE;
+  }
   return CameraID::WIDE;
 }
 
@@ -203,7 +207,7 @@ static void stdinToQueueThread() {
 
 static bool readInteractiveCamPixel(std::string* lost_from_cam, double* lost_pixel_x, double* lost_pixel_y) {
   std::cerr << "\n[target_searcher_tester] 请输入丢失相机与归一化像素偏移（空格分隔）\n"
-               "  例: WIDE 1 1    或    TELE -1 0    或    BOTH 0 -1\n"
+               "  例: WIDE 1 1    或    TELE -1 0    或    BOTH 0 -1    或    NONE 0 0\n"
                "> " << std::flush;
   std::string line;
   while (std::getline(std::cin, line)) {
@@ -287,7 +291,7 @@ int main(int argc, char** argv) {
   pnh.param("lost_pixel_x", lost_pixel_x, lost_pixel_x);
   pnh.param("lost_pixel_y", lost_pixel_y, lost_pixel_y);
 
-  std::string lost_from_cam{"WIDE"};  // WIDE / TELE / BOTH
+  std::string lost_from_cam{"WIDE"};  // WIDE / TELE / BOTH / NONE
   pnh.param("lost_from_cam", lost_from_cam, lost_from_cam);
 
   // 单次模式：启动时读 lost_*；session_mode 下由悬停后终端命令给出任务

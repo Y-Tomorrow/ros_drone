@@ -86,7 +86,7 @@ void TargetSearcher::set_search_strategy(CameraID lost_from_cam, const Eigen::Ve
   _phase_time = 0.0f;
   _lost_pixel = pixel;
 
-  // 记录“丢失瞬间”的云台姿态作为基准（后续 task2 在此基础上偏转）
+  // 记录“丢失瞬间”的云台姿态作为基准
   const Eigen::Quaternionf q_gimbal = DataManager::getInstance().get_gimbal_orientation();
   _gimbal_rpy_at_lost = quaternionToEuler(q_gimbal);
 
@@ -97,6 +97,10 @@ void TargetSearcher::set_search_strategy(CameraID lost_from_cam, const Eigen::Ve
     _body_yaw_at_lost = 0.f;
 
   _vx_body_at_lost = DataManager::getInstance().getVelBody().v.x();
+  _last_cmd_vel = Eigen::Vector4f(_vx_body_at_lost,
+                                  DataManager::getInstance().getVelBody().v.y(),
+                                  DataManager::getInstance().getVelBody().v.z(),
+                                  DataManager::getInstance().getVelBody().yaw_rate);
   _task1_vx_cmd_integrator = 0.f;
   _tele_gimbal_offset.setZero();
 }
@@ -104,10 +108,6 @@ void TargetSearcher::set_search_strategy(CameraID lost_from_cam, const Eigen::Ve
 TaskResult TargetSearcher::update(float dt) {
   TaskResult res;
   _phase_time += dt;
-
-  // 当前状态
-  const auto vel_body = DataManager::getInstance().getVelBody();  // body frame v + yaw_rate
-  const auto vel_enu = DataManager::getInstance().getVelEnu();    // ENU v + yaw_rate
 
   auto emitInfAndFinish = [&]() -> TaskResult {
     const float inf = std::numeric_limits<float>::infinity();
@@ -117,6 +117,7 @@ TaskResult TargetSearcher::update(float dt) {
     return res;
   };
 
+  // 进入 NONE 巡逻或直接 INF 结束
   auto enterNonePatrolOrFinish = [&]() -> TaskResult {
     // none.timeout_s <= 0：不进入 NONE，直接 INF
     if (!(_none.timeout_s > 0.0f)) {
@@ -142,6 +143,7 @@ TaskResult TargetSearcher::update(float dt) {
     if (_phase_time > _none.timeout_s) {
       return emitInfAndFinish();
     }
+    _last_cmd_vel = res.vel_vxyzy;
     return res;
   }
 
@@ -150,11 +152,11 @@ TaskResult TargetSearcher::update(float dt) {
 
     // 速度：vx 以当前追击速度为基准（可加速）；vy/vz/yaw_rate 使用 deadband：
     // 小于阈值视为噪声置 0，大于阈值认为是真实运动则保持当前值。
-    float vx_cmd = vel_body.v.x();
-    float vy_cmd = (std::abs(vel_body.v.y()) < std::abs(_tele.vy_keep_threshold_mps)) ? 0.0f : vel_body.v.y();
-    float vz_cmd = (std::abs(vel_body.v.z()) < std::abs(_tele.vz_keep_threshold_mps)) ? 0.0f : vel_body.v.z();
+    float vx_cmd = _last_cmd_vel(0);
+    float vy_cmd = (std::abs(_last_cmd_vel(1)) < std::abs(_tele.vy_keep_threshold_mps)) ? 0.0f : _last_cmd_vel(1);
+    float vz_cmd = (std::abs(_last_cmd_vel(2)) < std::abs(_tele.vz_keep_threshold_mps)) ? 0.0f : _last_cmd_vel(2);
     float yaw_rate_cmd =
-        (std::abs(vel_body.yaw_rate) < std::abs(_tele.yaw_rate_keep_threshold_rps)) ? 0.0f : vel_body.yaw_rate;
+        (std::abs(_last_cmd_vel(3)) < std::abs(_tele.yaw_rate_keep_threshold_rps)) ? 0.0f : _last_cmd_vel(3);
 
     // --- task1: 在追击速度基础上加速（vx） ---
     if (_tele.enable_task1_accel) {
@@ -199,17 +201,19 @@ TaskResult TargetSearcher::update(float dt) {
                             _none.gimbal_pitch_amp_rad * std::sin(_none.gimbal_pitch_omega_rps * t);
         res.gimbal_rpy = Eigen::Vector3f(0.f, -pitch, 0.f);
       }
+      _last_cmd_vel = res.vel_vxyzy;
       return res;
     }
+    _last_cmd_vel = res.vel_vxyzy;
   } 
   else if (_lost_cam == CameraID::WIDE) {
     // =============== WIDE 搜索策略（参数在 yaml，可开关各子任务） ===============
 
     // 以 body 速度各通道独立判断“低速/保持”
-    const float vx_now = vel_body.v.x();
-    const float vy_now = vel_body.v.y();
-    const float vz_now = vel_body.v.z();
-    const float yaw_rate_now = vel_body.yaw_rate;
+    const float vx_now = _last_cmd_vel(0);
+    const float vy_now = _last_cmd_vel(1);
+    const float vz_now = _last_cmd_vel(2);
+    const float yaw_rate_now = _last_cmd_vel(3);
 
     const float th_vx = std::abs(_wide.vxyzy_keep_threshold[0]);
     const float th_vy = std::abs(_wide.vxyzy_keep_threshold[1]);
@@ -318,6 +322,7 @@ TaskResult TargetSearcher::update(float dt) {
     if (_phase_time > _none.timeout_s) {
       return emitInfAndFinish();
     }
+    _last_cmd_vel = res.vel_vxyzy;
   }
 
   // WIDE 超时：先进入 NONE 巡逻（若 none.timeout_s>0），再由 NONE 超时输出 INF
@@ -334,6 +339,7 @@ TaskResult TargetSearcher::update(float dt) {
     }
   }
 
+  _last_cmd_vel = res.vel_vxyzy;
   return res;
 }
 
@@ -346,6 +352,7 @@ void TargetSearcher::reset() {
   _gimbal_rpy_at_lost.setZero();
   _body_yaw_at_lost = 0.f;
   _vx_body_at_lost = 0.f;
+  _last_cmd_vel.setZero();
   _task1_vx_cmd_integrator = 0.f;
   _tele_gimbal_offset.setZero();
 }

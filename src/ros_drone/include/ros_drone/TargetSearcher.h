@@ -108,7 +108,9 @@ private:
   Eigen::Vector3f _gimbal_rpy_at_lost{Eigen::Vector3f::Zero()};
   float _body_yaw_at_lost{0.0f};
   float _vx_body_at_lost{0.0f};
-  // Task1：低速分支下每帧若从 0 起算再只减一次 decel*dt，指令永远只有一步大小；用状态按 decel 连续积分
+  // 搜索阶段上一拍下发的速度指令状态（body frame v + yaw_rate）
+  Eigen::Vector4f _last_cmd_vel{Eigen::Vector4f::Zero()};
+  // Task1：低速分支下用状态按 decel 连续积分
   float _task1_vx_cmd_integrator{0.0f};
 
   // TELE: 云台相对丢失瞬间的偏移积分 (pitch, yaw)

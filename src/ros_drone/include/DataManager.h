@@ -133,6 +133,9 @@ public:
     // 获取同步后的飞控姿态四元数
     Eigen::Quaternionf get_imu_orientation() const;
     Eigen::Quaternionf get_gimbal_orientation() const;
+    // 单相机跟踪：归一化像素误差 (x,y)，由视觉/跟踪模块写入
+    Eigen::Vector2f get_pixel_norm() const;
+    void set_pixel_norm(const Eigen::Vector2f& p);
     // --- 公开的数据喂入接口 (供节点使用 boost::bind 绑定) ---
     void feed_gimbal_pose(const nav_msgs::Odometry::ConstPtr& msg);
     void feed_state(const mavros_msgs::State::ConstPtr& msg);
@@ -160,6 +163,7 @@ private:
     VelData_t        _vel_body_data;
     VelData_t        _vel_enu_data;
     ImuData_t        _imu_data;
+    Eigen::Vector2f  _pixel_norm{Eigen::Vector2f::Zero()};
     // --- 缓冲区结构与数据 (保留用于插值) ---
     struct OmegaBufItem { double timestamp; Eigen::Vector3f w; };
     std::deque<OmegaBufItem> _omega_buffer;

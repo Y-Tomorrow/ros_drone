@@ -1,0 +1,61 @@
+target_searcher:
+  # pixel_norm 到画面边界的最小距离
+  search:
+    edge_distance_threshold: 0.2
+
+  none:
+    timeout_s: 5.0               # NONE 巡逻时长；0=不进入 NONE（其他任务超时后直接 INF）
+    yaw_rate_rps: 0.6              # 机体 yaw 旋转速度 (rad/s)，>0 持续转圈
+    gimbal_pitch_center_rad: 0.0   # pitch 摆动中心 (rad)
+    gimbal_pitch_amp_rad: 0.35     # pitch 摆动幅度 (rad)
+    gimbal_pitch_omega_rps: 2.0    # pitch 摆动角频率 (rad/s)，越大摆得越快
+
+  tele:
+    enable_task1_accel: true          # 开：vx 加速
+    enable_task2_gimbal_drift: true   # 开：云台朝丢失方向缓慢漂移
+    longitudinal_cmd_in_body_frame: false  # true：纵向沿机头 x，vel 机体系；false：沿丢失瞬间世界水平前向，vel 水平为 ENU（东、北）
+
+    timeout_s: 5.0                   # 超时后指令全 INF
+
+    vy_keep_threshold_mps: 0.15       # |vy| 小于此值视为噪声 -> 置 0，否则保持
+    vz_keep_threshold_mps: 0.3       # |vz| 小于此值视为噪声 -> 置 0，否则保持
+    yaw_rate_keep_threshold_rps: 0.10 # |yaw_rate| 小于此值视为噪声 -> 置 0，否则保持
+
+    accel_mps2: 0.3                   # vx 加速率 (m/s²)
+    max_vx_mps: 10.0                   # vx 上限 (m/s)
+    max_vx_rise_from_lost_mps: 3.0    # 相对丢失瞬间 vx 最多再加多少；0=不限制
+
+    gimbal_pitch_rate_rps: 0.05       # pitch 漂移速率 (rad/s, |pixel|=1)
+    gimbal_yaw_rate_rps: 0.05         # yaw 漂移速率 (rad/s, |pixel|=1)
+    gimbal_pitch_offset_limit_rad: 1.0 # pitch 偏移限幅 (rad)
+    gimbal_yaw_offset_limit_rad: 1.0   # yaw 偏移限幅 (rad)
+
+  wide:
+    enable_task1_decel: true              # 开：每帧 vx 减速
+    enable_task2_gimbal_deflect: true     # 开：云台按 pixel 偏转
+    enable_task3_translate: false         # 开：低速时 vy/vz 增量
+    enable_task3_yaw_rate: true          # 开：低速时 yaw_rate 增量
+    longitudinal_cmd_in_body_frame: false  # 含义同 tele：true=机体系；false=世界水平纵向 + vel 水平 ENU
+
+    timeout_s: 5.0                       # 超时后指令全 INF 5
+
+    decel_mps2: 0.2                       # vx 减速率 (m/s²)
+    min_vx_mps: -0.3                      # vx 下限 (m/s，可负)
+    max_vx_drop_from_lost_mps: 0.5        # 相对丢失瞬间实测 vx，指令 vx 最多再降多少；0=不限制
+    cmd_vx_limit_mps: 5.0                # |vx| 上限
+
+    gimbal_roll_rad: 0.0                 # 云台 roll (rad)
+    gimbal_pitch_gain_rad: 0.05          # pixel_y → pitch 增益
+    gimbal_yaw_gain_rad: 0.05            # pixel_x → yaw 增益
+    gimbal_pitch_limit_rad: 1.2          # pitch 偏转限幅 (rad)
+    gimbal_yaw_limit_rad: 1.4            # yaw 偏转限幅 (rad) 
+
+    # body 速度各通道阈值 [vx, vy, vz, yaw_rate]；|当前|<阈值则该通道从 0 起算并可叠加 task3，否则保持当前
+    #（与原先 yaml 中 vxyzy_keep_threshold 四元含义一致；此处为数组写法，也可用 struct: vx/vy/vz/yaw_rate）
+    vxyzy_keep_threshold: [4.0, 4.0, 1.0, 0.2]
+
+    translate_gain_mps: 0.1              # pixel → vx/vy 增量增益
+    cmd_vy_limit_mps: 0.3                # |vy| 上限
+    yaw_rate_gain_rps: 0.05               # pixel_x → yaw_rate 增益 (rad/s)
+    yaw_rate_limit_rps: 0.2              # |yaw_rate| 上限 (rad/s)
+    body_yaw_limit_rad: 0.8             # 机体航向最大偏角 (rad)；0 或负为不限制 (~1.57≈90°)

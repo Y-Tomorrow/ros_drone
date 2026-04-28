@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 单相机 TargetSearcher 测试：rosparam load 本包 yaml；MAVROS 不提供像素，由节点内 set_pixel_norm 写入 -->
+  <!-- session_mode=true：悬停后在本终端输入「pixel_x pixel_y」，例如 1 0 或 0.2 0 -->
+  <arg name="uav_prefix" default="/uav0"/>
+  <arg name="session_mode" default="true"/>
+  <arg name="arm_and_offboard" default="true"/>
+  <arg name="send_velocity" default="true"/>
+  <arg name="send_gimbal" default="true"/>
+  <arg name="scenario_duration_s" default="70.0"/>
+  <arg name="return_pos_tol_m" default="0.25"/>
+  <arg name="return_z_tol_m" default="0.15"/>
+  <arg name="interactive" default="false" doc="仅 session_mode=false：true 启动时读一行 pixel_x pixel_y"/>
+  <arg name="lost_pixel_x" default="1.0"/>
+  <arg name="lost_pixel_y" default="0.0"/>
+  <arg name="hold_after_test" default="true"/>
+  <arg name="enable_takeoff" default="true"/>
+  <arg name="takeoff_altitude_m" default="1.0"/>
+  <arg name="takeoff_alt_tolerance_m" default="0.15"/>
+  <arg name="loop_hz" default="50.0"/>
+  <arg name="target_searcher_yaml" default="$(find target_searcher)/config/target_searcher.yaml"/>
+
+  <node pkg="target_searcher" type="target_searcher_pkg_tester_bin" name="target_searcher_pkg_tester" output="screen">
+    <rosparam command="load" file="$(arg target_searcher_yaml)"/>
+
+    <param name="uav_prefix" value="$(arg uav_prefix)"/>
+    <param name="arm_and_offboard" value="$(arg arm_and_offboard)"/>
+    <param name="send_velocity" value="$(arg send_velocity)"/>
+    <param name="send_gimbal" value="$(arg send_gimbal)"/>
+    <param name="scenario_duration_s" value="$(arg scenario_duration_s)"/>
+    <param name="session_mode" value="$(arg session_mode)"/>
+    <param name="return_pos_tol_m" value="$(arg return_pos_tol_m)"/>
+    <param name="return_z_tol_m" value="$(arg return_z_tol_m)"/>
+    <param name="interactive" value="$(arg interactive)"/>
+    <param name="lost_pixel_x" value="$(arg lost_pixel_x)"/>
+    <param name="lost_pixel_y" value="$(arg lost_pixel_y)"/>
+    <param name="hold_after_test" value="$(arg hold_after_test)"/>
+    <param name="enable_takeoff" value="$(arg enable_takeoff)"/>
+    <param name="takeoff_altitude_m" value="$(arg takeoff_altitude_m)"/>
+    <param name="takeoff_alt_tolerance_m" value="$(arg takeoff_alt_tolerance_m)"/>
+    <param name="loop_hz" value="$(arg loop_hz)"/>
+  </node>
+</launch>

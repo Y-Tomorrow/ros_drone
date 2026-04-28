@@ -173,6 +173,16 @@ Eigen::Quaternionf DataManager::get_gimbal_orientation() const {
     return get_synced_orientation(_gimbal_orientation_buffer);
 }
 
+Eigen::Vector2f DataManager::get_pixel_norm() const {
+    std::lock_guard<std::mutex> lock(_mutex);
+    return _pixel_norm;
+}
+
+void DataManager::set_pixel_norm(const Eigen::Vector2f& p) {
+    std::lock_guard<std::mutex> lock(_mutex);
+    _pixel_norm = p;
+}
+
 // --- 缓冲区时间同步与插值计算 ---
 Eigen::Quaternionf DataManager::get_synced_orientation(const std::deque<OriBufItem>& buffer) const {
     double timestamp=ros::Time::now().toSec();

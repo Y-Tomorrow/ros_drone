@@ -36,26 +36,31 @@ endif()
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES
+  LIBRARIES ros_drone_datamanager
   CATKIN_DEPENDS roscpp std_msgs geometry_msgs sensor_msgs nav_msgs mavros_msgs
 )
 
-add_executable(capturer_node
-  src/main.cpp
+add_library(ros_drone_datamanager
   src/DataManager.cpp
 )
-target_link_libraries(capturer_node ${catkin_LIBRARIES})
+target_link_libraries(ros_drone_datamanager ${catkin_LIBRARIES})
+add_dependencies(ros_drone_datamanager ${catkin_EXPORTED_TARGETS})
+
+add_executable(capturer_node
+  src/main.cpp
+)
+target_link_libraries(capturer_node ros_drone_datamanager ${catkin_LIBRARIES})
 add_dependencies(capturer_node ${catkin_EXPORTED_TARGETS})
 
 add_executable(target_searcher_tester_bin
   src/target_searcher_tester_bin.cpp
-  src/DataManager.cpp
   src/TargetSearcher.cpp
 )
-target_link_libraries(target_searcher_tester_bin ${catkin_LIBRARIES})
+target_link_libraries(target_searcher_tester_bin ros_drone_datamanager ${catkin_LIBRARIES})
 add_dependencies(target_searcher_tester_bin ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS
+  ros_drone_datamanager
   capturer_node
   target_searcher_tester_bin
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
